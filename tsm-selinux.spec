@@ -2,7 +2,7 @@
 
 Name:       tsm-selinux
 Version:    2.0.0
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    SELinux Policy for tsm
 
 Group:      System Environment/Base
@@ -33,13 +33,17 @@ install -D %{S:0} %{buildroot}%{_prefix}/usr/share/selinux/packages/tsm/tsm.pp
 
 %post
     /usr/sbin/semodule -i /usr/share/selinux/packages/tsm/tsm.pp
-    restorecon -R /etc/adsm /opt/tivoli/tsm/client /var/log/tsm
+    /sbin/restorecon -R /etc/adsm /opt/tivoli/tsm/client /var/log/tsm
+    #label all the ports.
+    /sbin/semanage port -a -t tsmadmin_ssl_port_t -p tcp 1601
+    /sbin/semanage port -a -t tsm_ssl_port_t -p tcp 1600
 
 %postun
 if [ $1 -eq 0 ]; then
     /usr/sbin/semodule -r tsm
-    restorecon -R /etc/adsm /opt/tivoli/tsm/client /var/log/tsm
-
+    /sbin/restorecon -R /etc/adsm /opt/tivoli/tsm/client /var/log/tsm
+    /sbin/semanage port -d -t tsmadmin_ssl_port_t -p tcp 1601
+    /sbin/semanage port -d -t tsm_ssl_port_t -p tcp 1600
 fi
 
 
