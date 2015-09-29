@@ -1,0 +1,9 @@
+/etc/adsm(/.*)? gen_context(system_u:object_r:tsm_adsm_t,s0)
+/opt/tivoli/tsm(/.*)? gen_context(system_u:object_r:tsm_lib_t,s0)
+/opt/tivoli/tsm/client/ba/bin/dsmadmc -- gen_context(system_u:object_r:dsmadmc_exec_t,s0)
+/opt/tivoli/tsm/client/ba/bin/dsmcad -- gen_context(system_u:object_r:dsmcad_exec_t,s0)
+/opt/tivoli/tsm/client/ba/bin/dsmc -- gen_context(system_u:object_r:dsmc_exec_t,s0)
+/opt/tivoli/tsm/client/ba/bin/dsmerror.log -- gen_context(system_u:object_r:tsm_log_t,s0)
+/var/log/tsm(/.*)? gen_context(system_u:object_r:tsm_log_t,s0)
+
+

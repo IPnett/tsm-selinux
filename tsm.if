@@ -1,0 +1,49 @@
+interface(`dsmadmc_domtrans',`
+    gen_require(`
+        type $1;
+        type tsm_lib_t;
+        type dsmadmc_t;
+        type dsmadmc_exec_t;
+    ')
+    allow $1 tsm_lib_t:dir { search getattr };
+    domtrans_pattern($1, dsmadmc_exec_t, dsmadmc_t);
+')
+
+
+interface(`tsm_manage_logs',`
+    gen_require(`
+        type $1;
+        type tsm_log_t;
+    ')
+     allow $1 tsm_log_t:file { read getattr open append write create unlink };
+     allow $1 tsm_log_t:dir { write remove_name add_name search };
+     logging_list_logs($1)
+')
+
+# interface for common perms in tsm. all tsm apps seem to need this.
+interface(`tsm_common_perms',`
+    gen_require(`
+        type $1;
+    type tmp_t;
+    type tmpfs_t;
+    ')
+    allow $1 tmp_t:dir { write remove_name add_name };
+    allow $1 tmp_t:file { write create unlink open };
+    allow $1 tmpfs_t:filesystem getattr;
+    tsm_base_perms($1)
+')
+
+interface(`tsm_base_perms',`
+    gen_require(`
+        type $1;
+        type tsm_lib_t;
+    ')
+    allow $1 tsm_lib_t:dir { read search open getattr };
+    allow $1 tsm_lib_t:file { read lock getattr open execute };
+    allow $1 tsm_lib_t:lnk_file { read getattr };
+    allow $1 self:process { execstack execmem signal };
+    allow $1 self:tcp_socket { write getattr setopt read getopt create connect };
+    allow $1 tsm_ssl_port_t:tcp_socket name_connect;
+    allow $1 tsm_adsm_t:dir { read search open getattr };
+    allow $1 tsm_adsm_t:file { write getattr setattr read create unlink open append };
+')

@@ -1,0 +1,96 @@
+policy_module(tsm, 1.0.0)
+type dsmcad_t;
+type dsmcad_exec_t;
+type dsmc_t;
+type dsmc_exec_t;
+type dsmadmc_t;
+type dsmadmc_exec_t;
+type tsm_lib_t;
+type tsm_log_t;
+type tsmadmin_ssl_port_t;
+type tsm_ssl_port_t;
+type tsm_backup_t;
+type tsm_adsm_t;
+
+#label all the ports
+corenet_port(tsmadmin_ssl_port_t)
+corenet_port(tsm_ssl_port_t)
+
+domain_type(dsmc_t)
+domain_type(dsmadmc_t)
+domain_type(dsmcad_t)
+files_type(dsmadmc_exec_t)
+files_type(dsmcad_exec_t)
+files_type(dsmc_exec_t)
+files_type(tsm_lib_t)
+files_type(tsm_log_t)
+files_type(tsm_backup_t)
+files_type(tsm_adsm_t)
+logging_log_file(tsm_log_t)
+
+init_domain(dsmcad_t,dsmcad_exec_t)
+domain_entry_file(dsmadmc_t, dsmadmc_exec_t);
+domain_entry_file(dsmcad_t, dsmcad_exec_t);
+domain_entry_file(dsmc_t, dsmc_exec_t);
+
+gen_tunable(tsm_dsmc_can_backup_system, true)
+# for rhel6
+domtrans_pattern(initrc_t, dsmcad_exec_t, dsmcad_t);
+domtrans_pattern(dsmcad_t, dsmc_exec_t, dsmc_t);
+
+require {
+    type initrc_t;
+    type console_device_t;
+    type devlog_t;
+    type device_t;
+    type hi_reserved_port_t;
+    attribute file_type;
+}
+#============= ROLES ==============
+role system_r types dsmadmc_t;
+role system_r types dsmc_t;
+
+#============= dsmadmc_t ==============
+allow dsmadmc_t console_device_t:chr_file getattr;
+allow dsmadmc_t devlog_t:sock_file write;
+allow dsmadmc_t tsmadmin_ssl_port_t:tcp_socket name_connect;
+sysnet_dns_name_resolve(dsmadmc_t)
+tsm_base_perms(dsmadmc_t)
+tsm_manage_logs(dsmadmc_t)
+
+#============= dsmcad_t ==============
+allow dsmcad_t console_device_t:chr_file { open write };
+allow dsmcad_t device_t:filesystem getattr;
+allow dsmcad_t init_t:unix_stream_socket { read write getattr };
+
+# subprocess dsmc
+allow dsmcad_t dsmc_t:process { siginh rlimitinh noatsecure };
+allow dsmcad_t self:unix_dgram_socket create;
+
+#Network
+allow dsmcad_t hi_reserved_port_t:tcp_socket name_bind;
+allow dsmcad_t self:tcp_socket { bind create accept listen };
+allow dsmcad_t self:netlink_route_socket { write getattr read bind create nlmsg_read };
+allow dsmcad_t self:unix_dgram_socket create;
+allow dsmcad_t self:capability { net_bind_service dac_override };
+
+corenet_tcp_bind_generic_node(dsmcad_t)
+tsm_common_perms(dsmcad_t)
+tsm_manage_logs(dsmcad_t)
+sysnet_dns_name_resolve(dsmcad_t)
+
+#============= dsmc_t ================
+
+tunable_policy(`tsm_dsmc_can_backup_system',`
+    auth_tunable_read_shadow(dsmc_t)
+    allow dsmc_t file_type:dir list_dir_perms;
+    read_files_pattern(dsmc_t, file_type, file_type)
+    fs_getattr_all_fs(dsmc_t)
+')
+
+allow dsmc_t self:capability dac_override;
+allow dsmc_t tsm_backup_t:dir { read search open getattr };
+allow dsmc_t tsm_backup_t:file { read getattr open execute };
+sysnet_dns_name_resolve(dsmc_t)
+tsm_common_perms(dsmc_t)
+tsm_manage_logs(dsmc_t)
