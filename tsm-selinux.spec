@@ -2,7 +2,7 @@
 
 Name:       tsm-selinux
 Version:    2.0.0
-Release:    4%.{?dist}
+Release:    4.%{?dist}
 Summary:    SELinux Policy for tsm
 
 Group:      System Environment/Base
